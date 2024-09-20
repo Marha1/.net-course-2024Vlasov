@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using BankSystem.App.Services;
 using BankSystemDomain.Models;
 
 namespace Practice;
@@ -22,8 +23,16 @@ public  class Program
         };
         UpdateCurrency(ref rub,"Доллар");
         Console.WriteLine(rub.Name);
+        BankService bankService = new BankService();
 
-    }
+        int salary = bankService.CalculateOwnerSalary(1000000, 500000, 5);
+        Console.WriteLine($"Зарплата владельца банка: {salary}");
+
+        Client client = new Client { Name = "Рома", Surname = "Никол", Age = 25 }; 
+        employee = bankService.ConvertClientToEmployee(client);
+        Console.WriteLine($"Новый сотрудник: {employee.Name} {employee.Surname}, возраст: {employee.Age}, зарплата: {employee.Salary}");
+        Console.WriteLine(employee.Name);
+     }
 
      private static void UpdateCurrency(ref Currency rub, string newCureency)
      {
