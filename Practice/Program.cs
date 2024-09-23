@@ -1,5 +1,4 @@
-﻿using System.Data;
-using BankSystem.App.Services;
+﻿using BankSystem.App.Services;
 using BankSystemDomain.Models;
 
 namespace Practice;
