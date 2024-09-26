@@ -15,40 +15,60 @@ public class Program
         var employees = generator.GenerateEmployees();
 
         var testPhoneNumber = clients[500].PhoneNumber;
-
+        var iterations = 1000;
         var stopwatch = new Stopwatch();
-        stopwatch.Start();
-        var clientFromList = clients.FirstOrDefault(c => c.PhoneNumber == testPhoneNumber);
-        stopwatch.Stop();
-        Console.WriteLine($"Время поиска в списке : {stopwatch.Elapsed.TotalMilliseconds} мс");
 
-        stopwatch.Restart();
-        var clientFromDictionary =
-            clientDictionary.ContainsKey(testPhoneNumber) ? clientDictionary[testPhoneNumber] : null;
-        stopwatch.Stop();
-        Console.WriteLine($"Время поиска в словаре : {stopwatch.Elapsed.TotalMilliseconds} мс");
+        double listSearchTime = 0;
+        for (int i = 0; i < iterations; i++)
+        {
+            stopwatch.Restart();
+            var clientFromList = clients.FirstOrDefault(c => c.PhoneNumber == testPhoneNumber);
+            stopwatch.Stop();
+            listSearchTime += stopwatch.Elapsed.TotalMilliseconds;
+        }
+        Console.WriteLine($"Среднее время поиска в списке: {listSearchTime / iterations} мс");
+
+        double dictionaryContainsTime = 0;
+        for (int i = 0; i < iterations; i++)
+        {
+            stopwatch.Restart();
+            var clientFromDictionary =
+                clientDictionary.ContainsKey(testPhoneNumber) ? clientDictionary[testPhoneNumber] : null;
+            stopwatch.Stop();
+            dictionaryContainsTime += stopwatch.Elapsed.TotalMilliseconds;
+        }
+        Console.WriteLine($"Среднее время поиска в словаре (ContainsKey): {dictionaryContainsTime / iterations} мс");
 
         var ageThreshold = 30;
         var youngClients = clients.Where(c => c.Age < ageThreshold).ToList();
         Console.WriteLine($"Найдено {youngClients.Count} клиентов младше {ageThreshold} лет");
 
         var employeeWithMinSalary = employees.OrderBy(e => e.Salary).FirstOrDefault();
-        Console.WriteLine(
-            $"Сотрудник с минимальной зарплатой: {employeeWithMinSalary.Name}, Зарплата: {employeeWithMinSalary.Salary}");
+        Console.WriteLine($"Сотрудник с минимальной зарплатой: {employeeWithMinSalary.Name}, Зарплата: {employeeWithMinSalary.Salary}");
 
-        stopwatch.Restart();
-        var lastClientFromList = clients.LastOrDefault(c => c.PhoneNumber == testPhoneNumber);
-        stopwatch.Stop();
-        Console.WriteLine($"Время поиска с помощью LastOrDefault: {stopwatch.Elapsed.TotalMilliseconds} мс");
+        double listLastSearchTime = 0;
+        for (int i = 0; i < iterations; i++)
+        {
+            stopwatch.Restart();
+            var lastClientFromList = clients.LastOrDefault(c => c.PhoneNumber == testPhoneNumber);
+            stopwatch.Stop();
+            listLastSearchTime += stopwatch.Elapsed.TotalMilliseconds;
+        }
+        Console.WriteLine($"Среднее время поиска с помощью LastOrDefault: {listLastSearchTime / iterations} мс");
 
-        stopwatch.Restart();
-        var clientFromDictionaryByKey = clientDictionary[testPhoneNumber];
-        stopwatch.Stop();
-        Console.WriteLine($"Время поиска в словаре по ключу занял: {stopwatch.Elapsed.TotalMilliseconds} мс");
+        double dictionaryDirectSearchTime = 0;
+        for (int i = 0; i < iterations; i++)
+        {
+            stopwatch.Restart();
+            var clientFromDictionaryByKey = clientDictionary[testPhoneNumber];
+            stopwatch.Stop();
+            dictionaryDirectSearchTime += stopwatch.Elapsed.TotalMilliseconds;
+        }
+        Console.WriteLine($"Среднее время поиска в словаре по ключу: {dictionaryDirectSearchTime / iterations} мс");
     }
 
 
-    private static void OldTaskRun()
+    private static void ExecuteOldTask()
     {
         #region Типы значений и Ссылочные типы
 
