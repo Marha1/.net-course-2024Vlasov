@@ -66,8 +66,7 @@ public class Program
         }
         Console.WriteLine($"Среднее время поиска в словаре по ключу: {dictionaryDirectSearchTime / iterations} мс");
     }
-
-
+    
     private static void ExecuteOldTask()
     {
         #region Типы значений и Ссылочные типы
