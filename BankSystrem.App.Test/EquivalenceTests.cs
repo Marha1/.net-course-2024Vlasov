@@ -15,29 +15,16 @@ public class EquivalenceTests
         var accounts = dataGenerator.GenerateClientAccounts(clients);
         var existingClient = clients[0];
 
-        var newClientWithoutOverride = new Client(false)
+       
+
+        var newClientWithOverride = new Client
         {
             Name = existingClient.Name,
             Surname = existingClient.Surname,
             Age = existingClient.Age,
             PhoneNumber = existingClient.PhoneNumber
         };
-
-        // Act 
-        var containsNewClientBeforeOverride = accounts.ContainsKey(newClientWithoutOverride);
-
-        // Assert 
-        Assert.False(containsNewClientBeforeOverride);
-
-        var newClientWithOverride = new Client(true)
-        {
-            Name = existingClient.Name,
-            Surname = existingClient.Surname,
-            Age = existingClient.Age,
-            PhoneNumber = existingClient.PhoneNumber
-        };
-
-        // Act 
+        
         var containsNewClientAfterOverride = accounts.ContainsKey(newClientWithOverride);
 
         // Assert 
@@ -52,7 +39,7 @@ public class EquivalenceTests
         var clients = dataGenerator.GenerateClients(10);
         var accounts = dataGenerator.GenerateClientAccounts(clients);
         var existingClient = clients[0];
-        var newClientWithOverride = new Client(true)
+        var newClientWithOverride = new Client
         {
             Name = existingClient.Name,
             Surname = existingClient.Surname,

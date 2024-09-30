@@ -12,7 +12,7 @@ public class TestDataGenerator
     {
         var clients = new List<Client>();
         for (var i = 0; i < count; i++)
-            clients.Add(new Client(true)
+            clients.Add(new Client
             {
                 Name = NameFaker.FirstName(),
                 Surname = NameFaker.LastName(),

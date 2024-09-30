@@ -45,7 +45,7 @@ public class Program
         var salary = bankService.CalculateOwnerSalary(1000000, 500000, 5);
         Console.WriteLine($"Зарплата владельца банка: {salary}");
 
-        var client = new Client (false){ Name = "Рома", Surname = "Никол", Age = 25 };
+        var client = new Client { Name = "Рома", Surname = "Никол", Age = 25 };
         employee = bankService.ConvertClientToEmployee(client);
         Console.WriteLine(
             $"Новый сотрудник: {employee.Name} {employee.Surname}, возраст: {employee.Age}, зарплата: {employee.Salary}");
