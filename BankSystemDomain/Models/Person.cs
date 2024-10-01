@@ -7,4 +7,6 @@ public class Person
     public string Surname { get; set; }
     public string  PassportDetails { get; set; }
     public int Age { get; set; }
+    public DateTime BirthDate { get; set; }
+    
 }
