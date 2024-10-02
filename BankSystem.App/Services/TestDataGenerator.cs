@@ -12,13 +12,21 @@ public class TestDataGenerator
     {
         var clients = new List<Client>();
         for (var i = 0; i < count; i++)
+        {
+            var age = random.Next(18, 65);
+            var year = DateTime.Today.Year - age; 
+            var month = random.Next(1, 13); 
+            var day = random.Next(1, DateTime.DaysInMonth(year, month) + 1); 
             clients.Add(new Client
             {
+
                 Name = NameFaker.FirstName(),
                 Surname = NameFaker.LastName(),
-                Age = random.Next(18, 65),
-                PhoneNumber = GeneratePhoneNumber()
+                Age = age,
+                PhoneNumber = GeneratePhoneNumber(),
+                BirthDate = new DateTime(year, month, day),
             });
+        }
 
         return clients;
     }
@@ -44,17 +52,21 @@ public class TestDataGenerator
     public List<Employee> GenerateEmployees(int count = 1000)
     {
         var employees = new List<Employee>();
-
         for (var i = 0; i < count; i++)
+        {
+            var age = random.Next(18, 65);
+            var year = DateTime.Today.Year - age; 
+            var month = random.Next(1, 13); 
+            var day = random.Next(1, DateTime.DaysInMonth(year, month) + 1); 
             employees.Add(new Employee
             {
                 Name = NameFaker.FirstName(),
                 Surname = NameFaker.LastName(),
-                Age = random.Next(18, 65),
-                PhoneNumber = GeneratePhoneNumber(),
-                Expirence = random.Next(1, 40),
-                Salary = (decimal)(random.Next(30000, 100000) + random.NextDouble())
+                Age = age,
+                BirthDate = new DateTime(year, month, day),
+                PhoneNumber = GeneratePhoneNumber()
             });
+        }
 
         return employees;
     }
