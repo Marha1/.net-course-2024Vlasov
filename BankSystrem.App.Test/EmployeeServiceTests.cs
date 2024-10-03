@@ -23,7 +23,7 @@ namespace BankSystem.App.Test
 
             // Act
             storage.AddEmployee(employee);
-            var employees = storage.GetEmployees();
+            var employees = storage.GetEmployee();
 
             // Assert
             Assert.Contains(employee, employees);
@@ -41,7 +41,7 @@ namespace BankSystem.App.Test
             var service = new EmployeeService(storage);
 
             // Act
-            var result = service.GetEmployeesByFilter(employee1.Name, null, null, null, null);
+            var result = service.GetEmployeeByFilter(employee1.Name, null, null, null, null);
 
             // Assert
             Assert.Contains(employee1, result);
@@ -71,7 +71,7 @@ namespace BankSystem.App.Test
             var service = new EmployeeService(storage);
 
             // Act
-            var youngestEmployee = service.GetYoungestEmployee();
+            var youngestEmployee = storage.GetYoungestEmployee();
 
             // Assert
             Assert.Equal(employee2, youngestEmployee); 
@@ -89,7 +89,7 @@ namespace BankSystem.App.Test
             var service = new EmployeeService(storage);
 
             // Act
-            var oldestEmployee = service.GetOldestEmployee();
+            var oldestEmployee = storage.GetOldestEmployee();
 
             // Assert
             Assert.Equal(employee1, oldestEmployee);
@@ -107,7 +107,7 @@ namespace BankSystem.App.Test
             var service = new EmployeeService(storage);
 
             // Act
-            var averageAge = service.CalculateAverageAge();
+            var averageAge = storage.CalculateAverageAge();
 
             // Assert
             Assert.Equal((employee1.Age + employee2.Age) / 2, averageAge);
