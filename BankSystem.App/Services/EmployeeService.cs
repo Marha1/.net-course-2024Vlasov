@@ -12,30 +12,42 @@ public class EmployeeService
         _employeeStorage = employeeStorage;
     }
 
+    public void AddEmployee(Employee employee)
+    {
+        _employeeStorage.AddEmployee(employee);
+    }
+
+    public bool RemoveEmployee(string phoneNumber)
+    {
+        return _employeeStorage.RemoveEmployee(phoneNumber);
+    }
+
+    public bool UpdateEmployee(string phoneNumber, Employee updatedEmployee)
+    {
+        return _employeeStorage.UpdateEmployee(phoneNumber, updatedEmployee);
+    }
+
     public List<Employee> GetEmployeesByFilter(string? name, string? phoneNumber, string? passportDetails,
         DateTime? birthDateFrom, DateTime? birthDateTo)
     {
-        return _employeeStorage.GetEmployees().Where(employee =>
-            (string.IsNullOrEmpty(name) || employee.Name.Contains(name) || employee.Surname.Contains(name)) &&
-            (string.IsNullOrEmpty(phoneNumber) || employee.PhoneNumber == phoneNumber) &&
-            (string.IsNullOrEmpty(passportDetails) || employee.PassportDetails == passportDetails) &&
-            (!birthDateFrom.HasValue || employee.BirthDate >= birthDateFrom) &&
-            (!birthDateTo.HasValue || employee.BirthDate <= birthDateTo)
-        ).ToList();
-    }
-
-    public Employee GetYoungestEmployee()
-    {
-        return _employeeStorage.GetEmployees().OrderByDescending(employee => employee.BirthDate).FirstOrDefault();
+        return _employeeStorage.GetEmployeesByFilter(name, phoneNumber, passportDetails, birthDateFrom, birthDateTo);
     }
 
     public Employee GetOldestEmployee()
     {
-        return _employeeStorage.GetEmployees().OrderBy(employee => employee.BirthDate).FirstOrDefault();
+        return _employeeStorage.GetOldestEmployee();
+    }
+
+    public Employee GetYoungestEmployee()
+    {
+        return _employeeStorage.GetYoungestEmployee();
     }
 
     public double CalculateAverageAge()
     {
-        return _employeeStorage.GetEmployees().Average(employee => employee.Age);
+        var employees = _employeeStorage.GetEmployees();
+        return employees.Count > 0
+            ? employees.Average(employee => employee.Age)
+            : 0;
     }
 }

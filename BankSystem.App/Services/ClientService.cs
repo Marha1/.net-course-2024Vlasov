@@ -12,30 +12,53 @@ public class ClientService
         _clientStorage = clientStorage;
     }
 
+    public void AddClient(Client client)
+    {
+        _clientStorage.AddClient(client);
+    }
+
+
+    public bool RemoveClient(string phoneNumber)
+    {
+        return _clientStorage.RemoveClient(phoneNumber);
+    }
+
+    public bool UpdateClient(string phoneNumber, Client updatedClient)
+    {
+        return _clientStorage.UpdateClient(phoneNumber, updatedClient);
+    }
+
+    public void AddAccount(string phoneNumber, Account newAccount)
+    {
+        _clientStorage.AddAccount(phoneNumber, newAccount);
+    }
+
+    public bool UpdateClientAccount(string phoneNumber, Account updatedAccount)
+    {
+        return _clientStorage.UpdateClientAccount(phoneNumber, updatedAccount);
+    }
+
     public List<Client> GetClientsByFilter(string? name, string? phoneNumber, string? passportDetails,
         DateTime? birthDateFrom, DateTime? birthDateTo)
     {
-        return _clientStorage.GetClients().Where(client =>
-            (string.IsNullOrEmpty(name) || client.Name.Contains(name) || client.Surname.Contains(name)) &&
-            (string.IsNullOrEmpty(phoneNumber) || client.PhoneNumber == phoneNumber) &&
-            (string.IsNullOrEmpty(passportDetails) || client.PassportDetails == passportDetails) &&
-            (!birthDateFrom.HasValue || client.BirthDate >= birthDateFrom) &&
-            (!birthDateTo.HasValue || client.BirthDate <= birthDateTo)
-        ).ToList();
-    }
-
-    public Client GetYoungestClient()
-    {
-        return _clientStorage.GetClients().OrderByDescending(client => client.BirthDate).FirstOrDefault();
+        return _clientStorage.GetClientsByFilter(name, phoneNumber, passportDetails, birthDateFrom, birthDateTo);
     }
 
     public Client GetOldestClient()
     {
-        return _clientStorage.GetClients().OrderBy(client => client.BirthDate).FirstOrDefault();
+        return _clientStorage.GetOldestClient();
+    }
+
+    public Client GetYoungestClient()
+    {
+        return _clientStorage.GetYoungestClient();
     }
 
     public double CalculateAverageAge()
     {
-        return _clientStorage.GetClients().Average(client => client.Age);
+        var clients = _clientStorage.GetClients();
+        return clients.Count > 0
+            ? clients.Average(client => client.Key.Age)
+            : 0;
     }
 }
