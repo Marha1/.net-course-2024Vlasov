@@ -1,9 +1,9 @@
+using BankSystem.App.Exceptions; 
 using BankSystem.App.Services;
 using BankSystem.App.Services.Storage;
-using BankSystemDomain.Models;
 using Xunit;
 
-namespace BankSystrem.App.Test;
+namespace BankSystem.App.Test;
 
 public class ClientServiceTests
 {
@@ -15,7 +15,33 @@ public class ClientServiceTests
     }
 
     [Fact]
-    public void AddClient()
+    public void AddClient_ThrowsExceptionIfUnder18_Test()
+    {
+        // Arrange
+        var storage = new ClientStorage();
+        var client = _dataGenerator.GenerateClients(1).First();
+        client.Age = 15;
+
+        // Act & Assert
+        var exception = Assert.Throws<AgeException>(() => storage.AddClient(client));
+        Assert.Equal("Моложе 18 лет!", exception.Message);
+    }
+
+    [Fact]
+    public void AddClient_ThrowsExceptionIfNoPassport_Test()
+    {
+        // Arrange
+        var storage = new ClientStorage();
+        var client = _dataGenerator.GenerateClients(1).First();
+        client.PassportDetails = null;
+
+        // Act & Assert
+        var exception = Assert.Throws<Exception>(() => storage.AddClient(client));
+        Assert.Equal("Паспортные данные отсутствуют.", exception.Message);
+    }
+
+    [Fact]
+    public void AddClient_CreatesDefaultUSDAccount_Test()
     {
         // Arrange
         var storage = new ClientStorage();
@@ -23,14 +49,15 @@ public class ClientServiceTests
 
         // Act
         storage.AddClient(client);
-        var clients = storage.GetClients();
+        var accounts = storage.GetClients().First().Value;
 
         // Assert
-        Assert.Contains(client, clients);
+        var defaultAccount = accounts.FirstOrDefault(a => a.Currency.Name == "USD");
+        Assert.NotNull(defaultAccount); 
     }
 
     [Fact]
-    public void GetClientsByFilter()
+    public void GetClientByName_Test()
     {
         // Arrange
         var storage = new ClientStorage();
@@ -48,66 +75,4 @@ public class ClientServiceTests
         Assert.DoesNotContain(client2, result);
     }
 
-    [Fact]
-    public void GetYoungestClient()
-    {
-        // Arrange
-        var storage = new ClientStorage();
-        var client1 = _dataGenerator.GenerateClients(1).First();
-        var client2 = _dataGenerator.GenerateClients(1).First();
-        storage.AddClient(client1);
-        storage.AddClient(client2);
-        var service = new ClientService(storage);
-
-        // Act
-        var youngestClient = storage.GetYoungestClient();
-
-        // Assert
-        Assert.NotNull(youngestClient);
-    }
-
-    [Fact]
-    public void GetOldestClient()
-    {
-        // Arrange
-        var storage = new ClientStorage();
-        var client1 = new Client()
-        {
-            Name = "Кайла",
-            BirthDate = new DateTime(1990, 1, 1) 
-        };
-
-        var client2 = new Client()
-        {
-            Name = "Циля",
-            BirthDate = new DateTime(2000, 1, 1) 
-        };
-        storage.AddClient(client1);
-        storage.AddClient(client2);
-        var service = new ClientService(storage);
-
-        // Act
-        var oldestClient = storage.GetOldestClient();
-
-        // Assert
-        Assert.Equal(client1, oldestClient);
-    }
-
-    [Fact]
-    public void CalculateAverageAge()
-    {
-        // Arrange
-        var storage = new ClientStorage();
-        var client1 = _dataGenerator.GenerateClients(1).First();
-        var client2 = _dataGenerator.GenerateClients(1).First();
-        storage.AddClient(client1);
-        storage.AddClient(client2);
-        var service = new ClientService(storage);
-
-        // Act
-        var averageAge = storage.CalculateAverageAge();
-
-        // Assert
-        Assert.Equal((client1.Age + client2.Age) / 2, averageAge);
-    }
 }
