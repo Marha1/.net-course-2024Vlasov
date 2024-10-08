@@ -1,7 +1,8 @@
-using BankSystem.App.Exceptions;
+/*
 using BankSystemDomain.Models;
+using BankSystem.App.Exceptions;
 
-namespace BankSystem.App.Services.Storage
+namespace BankSystem.Data.Storage
 {
     public class ClientStorage
     {
@@ -144,3 +145,4 @@ namespace BankSystem.App.Services.Storage
         }
     }
 }
+*/

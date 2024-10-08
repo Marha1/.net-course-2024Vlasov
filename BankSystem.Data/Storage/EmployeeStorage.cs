@@ -1,7 +1,7 @@
-using BankSystem.App.Exceptions;
+/*using BankSystem.App.Exceptions;
 using BankSystemDomain.Models;
 
-namespace BankSystem.App.Services.Storage;
+namespace BankSystem.Data.Storage;
 
 public class EmployeeStorage
 {
@@ -89,4 +89,4 @@ public class EmployeeStorage
         _employees.Add(updatedEmployee);
         return true;
     }
-}
+}*/
