@@ -5,19 +5,17 @@ namespace BankSystem.Data.Storage.Implementations;
 
 public class ClientStorage : BaseStorage<Client>, IClientStorage
 {
-    private readonly Dictionary<Client, List<Account>> _clientAccounts = new();
+    private readonly  Dictionary<Client, List<Account>> _clientAccounts;
     
-    private readonly List<Client> _clients; 
-
-    internal ClientStorage()
+    public ClientStorage()
     {
-        _clients = new List<Client>();
+        _clientAccounts = new Dictionary<Client, List<Account>>();
     }
     
     public List<Client> GetByFilter(string? name, string? phoneNumber, string? passportDetails, DateTime? birthDateFrom,
         DateTime? birthDateTo, int pageNumber, int pageSize)
     {
-        var query = _clients.AsQueryable();
+        var query = GetEntities(1,2).AsQueryable();
 
         if (!string.IsNullOrEmpty(name))
         {
@@ -51,10 +49,15 @@ public class ClientStorage : BaseStorage<Client>, IClientStorage
 
     public void AddAccount(string phoneNumber, Account newAccount)
     {
-        var client = _clientAccounts.Keys.FirstOrDefault(c => c.PhoneNumber == phoneNumber);
+        var client = GetEntities(1, 10).FirstOrDefault(c => c.PhoneNumber == phoneNumber);
         if (client == null)
         {
             throw new Exception($"Клиент с номером телефона {phoneNumber} не найден.");
+        }
+
+        if (!_clientAccounts.ContainsKey(client)|| _clientAccounts.Count==0)
+        {
+            _clientAccounts[client] = new List<Account>();
         }
 
         var existingAccount = _clientAccounts[client].FirstOrDefault(a => a.Currency.Name == newAccount.Currency.Name);
@@ -65,6 +68,7 @@ public class ClientStorage : BaseStorage<Client>, IClientStorage
 
         _clientAccounts[client].Add(newAccount);
     }
+
 
     public bool UpdateAccount(string phoneNumber, Account updatedAccount)
         {

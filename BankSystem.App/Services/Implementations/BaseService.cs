@@ -27,4 +27,19 @@ public class BaseService<T> : IBaseService<T> where T : Person
     {
         return _storage.Delete(entity);
     }
+
+    public IReadOnlyList<T> GetEntities(int pageNumber, int pageSize)
+    {
+        if (pageNumber <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(pageNumber), "Номер страницы должен быть больше 0.");
+        }
+
+        if (pageSize <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(pageSize), "Размер страницы должен быть больше 0.");
+        }
+
+        return _storage.GetEntities(pageNumber, pageSize);
+    }
 }

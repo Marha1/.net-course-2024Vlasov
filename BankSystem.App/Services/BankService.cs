@@ -1,28 +1,47 @@
+using BankSystem.App.Services.Implementations;
+using BankSystem.Data.Storage.Implementations;
 using BankSystemDomain.Models;
 
 namespace BankSystem.App.Services;
 
 public class BankService
 {
-    public int CalculateOwnerSalary(int bankProfit, int bankExpenses, int ownerCount)
+    private readonly List<Person> _blackList = new();
+    private readonly ClientService _clientService;
+    private readonly ClientStorage _storage;
+
+    public BankService()
     {
-        return (bankProfit - bankExpenses) / ownerCount;
+        _storage = new ClientStorage();
+        _clientService = new ClientService(_storage);
     }
 
-    public Employee ConvertClientToEmployee(Client client)
+    public void AddBonus(Person person, decimal bonusAmount)
     {
-        if (client is Employee)
+        if (person is Client client)
         {
-            return (Employee)(object)client;
-        }
+            var account = _clientService.GetAccountsByPhoneNumber(person.PhoneNumber)
+                .FirstOrDefault();
 
-        return new Employee
+            if (account != null) account.Amount = 100;
+        }
+        else if (person is Employee employee)
         {
-            Name = client.Name,
-            Surname = client.Surname,
-            Age = client.Age,
-            Expirence = 0, 
-            Salary = 3000
-        };
+            employee.Salary += bonusAmount;
+        }
+        else
+        {
+            throw new InvalidOperationException("Неизвестный тип для добавления бонуса.");
+        }
+    }
+
+    public void AddToBlackList<T>(T person) where T : Person
+    {
+        if (!_blackList.Contains(person)) _blackList.Add(person);
+    }
+
+    public bool IsPersonInBlackList<T>(T person) where T : Person
+    {
+        return _blackList.Contains(person);
     }
 }

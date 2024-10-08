@@ -51,7 +51,17 @@ public abstract class BaseStorage<T> : IBaseStorage<T> where T: Person
         _items.Remove(itemToRemove);
         return true;
     }
-    
+
+    public IReadOnlyList<T> GetEntities(int pageNumber, int pageSize)
+    {
+       
+        return _items
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToList()
+            .AsReadOnly();
+    }
+
     protected virtual void ValidateEntity(T entity)
     {
         if (entity.Age < 18)

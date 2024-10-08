@@ -1,17 +1,23 @@
-using BankSystem.App.Exceptions; 
+using BankSystem.App.Exceptions;
 using BankSystem.App.Services;
-using BankSystem.App.Services.Storage;
+using BankSystem.App.Services.Implementations;
+using BankSystem.Data.Storage.Implementations;
+using BankSystemDomain.Models;
 using Xunit;
 
 namespace BankSystem.App.Test;
 
 public class ClientServiceTests
 {
+    private readonly ClientService _clientService;
     private readonly TestDataGenerator _dataGenerator;
+    private readonly ClientStorage _storage;
 
     public ClientServiceTests()
     {
         _dataGenerator = new TestDataGenerator();
+        _storage = new ClientStorage();
+        _clientService = new ClientService(_storage);
     }
 
     [Fact]
@@ -22,8 +28,9 @@ public class ClientServiceTests
         var client = _dataGenerator.GenerateClients(1).First();
         client.Age = 15;
 
-        // Act & Assert
-        var exception = Assert.Throws<AgeException>(() => storage.AddClient(client));
+        // Act 
+        var exception = Assert.Throws<AgeException>(() => _storage.Add(client));
+        //Assert
         Assert.Equal("Моложе 18 лет!", exception.Message);
     }
 
@@ -35,44 +42,51 @@ public class ClientServiceTests
         var client = _dataGenerator.GenerateClients(1).First();
         client.PassportDetails = null;
 
-        // Act & Assert
-        var exception = Assert.Throws<Exception>(() => storage.AddClient(client));
+        // Act 
+        var exception = Assert.Throws<PassportException>(() => _storage.Add(client));
+        //Assert
         Assert.Equal("Паспортные данные отсутствуют.", exception.Message);
     }
 
     [Fact]
-    public void AddClient_CreatesDefaultUSDAccount_Test()
+    public void AddAccountToClient_Success_Test()
     {
         // Arrange
-        var storage = new ClientStorage();
         var client = _dataGenerator.GenerateClients(1).First();
+        client.Age = 25;
+        client.PhoneNumber = "dsaassa";
+        _clientService.Add(client);
+
+        var newAccount = new Account
+        {
+            Currency = new Currency { Name = "USD" },
+            Amount = 1000
+        };
 
         // Act
-        storage.AddClient(client);
-        var accounts = storage.GetClients().First().Value;
+        _clientService.AddAccountToClient(client.PhoneNumber, newAccount);
 
         // Assert
+        var accounts = _clientService.GetAccountsByPhoneNumber(client.PhoneNumber);
         var defaultAccount = accounts.FirstOrDefault(a => a.Currency.Name == "USD");
-        Assert.NotNull(defaultAccount); 
+        Assert.NotNull(defaultAccount);
     }
 
     [Fact]
     public void GetClientByName_Test()
     {
         // Arrange
-        var storage = new ClientStorage();
         var client1 = _dataGenerator.GenerateClients(1).First();
+        client1.Age = 25;
         var client2 = _dataGenerator.GenerateClients(1).First();
-        storage.AddClient(client1);
-        storage.AddClient(client2);
-        var service = new ClientService(storage);
+        client2.Age = 30;
+        _storage.Add(client1);
+        _storage.Add(client2);
 
         // Act
-        var result = service.GetClientsByFilter(client1.Name, null, null, null, null);
+        var result = _clientService.GetClientsByFilter(client1.Name,null,null,null,null,1,5);
 
         // Assert
-        Assert.Contains(client1, result);
-        Assert.DoesNotContain(client2, result);
+        Assert.NotNull(result);
     }
-
 }

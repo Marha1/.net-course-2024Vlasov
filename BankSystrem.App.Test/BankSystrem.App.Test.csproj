@@ -6,9 +6,7 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\BankSystem.App\BankSystem.App.csproj" />
-    </ItemGroup>
+   
 
     <ItemGroup>
       <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
@@ -22,5 +20,21 @@
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
     </ItemGroup>
+
+   
+
+    <ItemGroup>
+      <ProjectReference Include="..\BankSystem.App\BankSystem.App.csproj" />
+      <ProjectReference Include="..\BankSystemDomain\BankSystemDomain.csproj" />
+    </ItemGroup>
+
+   
+
+    <ItemGroup>
+      <ProjectReference Include="..\BankSystem.App\BankSystem.App.csproj" />
+      <ProjectReference Include="..\BankSystemDomain\BankSystemDomain.csproj" />
+    </ItemGroup>
+
+    
 
 </Project>
