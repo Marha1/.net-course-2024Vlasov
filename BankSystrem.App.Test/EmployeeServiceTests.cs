@@ -1,132 +1,85 @@
 using BankSystem.App.Exceptions;
 using BankSystem.App.Services;
-using BankSystem.App.Services.Storage;
+using BankSystem.App.Services.Implementations;
+using BankSystem.App.Services.Interfaces;
+using BankSystem.Data.Storage;
+using BankSystem.Data.Storage.Implementations;
+using BankSystem.Data.Storage.Interfaces;
 using BankSystemDomain.Models;
 using Xunit;
 
-namespace BankSystem.App.Test
+namespace BankSystem.App.Tests
 {
     public class EmployeeServiceTests
     {
+        private readonly EmployeService _employService;
         private readonly TestDataGenerator _dataGenerator;
-
+        private readonly EmployeeStorage _employeeStorage;
         public EmployeeServiceTests()
         {
             _dataGenerator = new TestDataGenerator();
+            _employeeStorage = new EmployeeStorage();
+            _employService = new EmployeService(_employeeStorage);
         }
 
         [Fact]
-        public void AddEmployee_ThrowsExceptionIfUnder18_Test()
+        public void AddEmployee_Success_Test()
         {
             // Arrange
-            var storage = new EmployeeStorage();
-            var employee = _dataGenerator.GenerateEmployees(1).First();
-            employee.Age = 15;
-
-            // Act & Assert
-            var exception = Assert.Throws<AgeException>(() => storage.AddEmployee(employee));
-            Assert.Equal("Моложе 18 лет!", exception.Message);
-        }
-
-        [Fact]
-        public void AddEmployee_ThrowsExceptionIfNoPassport_Test()
-        {
-            // Arrange
-            var storage = new EmployeeStorage();
-            var employee = _dataGenerator.GenerateEmployees(1).First();
-            employee.PassportDetails = null;
-
-            // Act & Assert
-            var exception = Assert.Throws<PassportException>(() => storage.AddEmployee(employee));
-            Assert.Equal("Паспортные данные отсутствуют.", exception.Message);
-        }
-        
-        [Fact]
-        public void GetEmployeesByName_Test()
-        {
-            // Arrange
-            var storage = new EmployeeStorage();
-            var employee1 = _dataGenerator.GenerateEmployees(1).First();
-            var employee2 = _dataGenerator.GenerateEmployees(1).First();
-            storage.AddEmployee(employee1);
-            storage.AddEmployee(employee2);
-            var service = new EmployeeService(storage);
-
-            // Act
-            var result = service.GetEmployeesByFilter(employee1.Name, null, null, null, null);
-
-            // Assert
-            Assert.Contains(employee1, result);
-            Assert.DoesNotContain(employee2, result);
-        }
-
-        [Fact]
-        public void GetYoungestEmployee_Test()
-        {
-            // Arrange
-            var storage = new EmployeeStorage();
-
-            var employee1 = new Employee
-            {
-                Name = "Кайла",
-                BirthDate = new DateTime(1990, 1, 1)
-            };
-            employee1.Age = 19;
-            employee1.PassportDetails = "3213212";
-            employee1.PhoneNumber = "saa";
             
-            var employee2 = new Employee
-            {
-                Name = "Циля",
-                BirthDate = new DateTime(2000, 1, 1)
-            };
-            employee2.Age = 20;
-            employee2.PassportDetails = "3213212";
-            employee2.PhoneNumber = "3sdadsaa";
-            storage.AddEmployee(employee1);
-            storage.AddEmployee(employee2);
-            var service = new EmployeeService(storage);
+            var employee = _dataGenerator.GenerateEmployees(1).First();
 
             // Act
-            var youngestEmployee = service.GetYoungestEmployee();
+            _employService.Add(employee);
 
             // Assert
-            Assert.Equal(employee2, youngestEmployee);
+            var employees = _employeeStorage.GetEntities(1, 100); 
+            Assert.Contains(employee, employees);
         }
 
         [Fact]
-        public void GetOldestEmployee_Test()
+        public void UpdateEmployee_Success_Test()
         {
             // Arrange
-            var storage = new EmployeeStorage();
+            var employee = _dataGenerator.GenerateEmployees(1).First();
+            _employService.Add(employee);
 
-            var employee1 = new Employee
+            var updatedEmployee = new Employee
             {
-                Name = "Кайла",
-                BirthDate = new DateTime(1990, 1, 1)
+                Name = "Гыг",
+                Surname = employee.Surname,
+                BirthDate = employee.BirthDate,
+                PassportDetails = employee.PassportDetails,
+                PhoneNumber = employee.PhoneNumber,
+                Age = employee.Age,
             };
-            employee1.Age = 19;
-            employee1.PassportDetails = "3213212";
-            employee1.PhoneNumber = "saa";
-            
-            var employee2 = new Employee
-            {
-                Name = "Циля",
-                BirthDate = new DateTime(2000, 1, 1)
-            };
-            employee2.Age = 20;
-            employee2.PassportDetails = "3213212";
-            employee2.PhoneNumber = "3sdadsaa";
-
-            storage.AddEmployee(employee1);
-            storage.AddEmployee(employee2);
-            var service = new EmployeeService(storage);
 
             // Act
-            var oldestEmployee = service.GetOldestEmployee();
+            var result = _employService.Update(updatedEmployee);
 
             // Assert
-            Assert.Equal(employee1, oldestEmployee);
+            var updated = _employService.GetEntities(1, 100) 
+                .FirstOrDefault(e => e.Name == updatedEmployee.Name);
+
+            Assert.True(result);
+            Assert.NotNull(updated); 
+            Assert.Equal("Гыг", updated.Name);
+        }
+
+
+        [Fact]
+        public void DeleteEmployee_Success_Test()
+        {
+            // Arrange
+            var employee = _dataGenerator.GenerateEmployees(1).First();
+            _employService.Add(employee);
+
+            // Act
+            var result = _employService.Delete(employee);
+
+            // Assert
+            var employees = _employeeStorage.GetEntities(1,5);
+            Assert.DoesNotContain(employee,employees);
         }
     }
 }
