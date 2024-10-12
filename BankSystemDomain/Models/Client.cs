@@ -1,5 +1,3 @@
-using System;
-
 namespace BankSystemDomain.Models 
 { 
     public class Client : Person 
