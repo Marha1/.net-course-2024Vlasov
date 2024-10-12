@@ -1,5 +1,3 @@
-using System;
-
 namespace BankSystem.App.Exceptions
 {
     public class AgeException : Exception
