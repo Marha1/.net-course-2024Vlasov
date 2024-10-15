@@ -6,7 +6,14 @@ namespace BankSystem.App.Services.Implementations;
 
 public class EmployeService : BaseService<Employee>, IEmployeeService
 {
-    public EmployeService(IBaseStorage<Employee> storage) : base(storage)
+    private readonly IEmployeeStorage _employStorage;
+    public EmployeService(IEmployeeStorage employeeStorage) : base(employeeStorage)
     {
+        _employStorage = employeeStorage;
+    }
+    public Employee GetById(Guid id)
+    {
+        
+       return _employStorage.GetById(id);
     }
 }

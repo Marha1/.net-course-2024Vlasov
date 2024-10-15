@@ -21,7 +21,6 @@ public class TestDataGenerator
             {
                 Name = NameFaker.FirstName(),
                 Surname = NameFaker.LastName(),
-                Age = age,
                 PhoneNumber = GeneratePhoneNumber(),
                 BirthDate = new DateTime(year, month, day),
                 PassportDetails = GeneratePassport(), 
@@ -60,10 +59,9 @@ public class TestDataGenerator
             {
                 Name = NameFaker.FirstName(),
                 Surname = NameFaker.LastName(),
-                Age = age,
                 BirthDate = new DateTime(year, month, day),
                 PhoneNumber = GeneratePhoneNumber(),
-                PassportDetails = GeneratePassport()
+                PassportDetails = GeneratePassport(),Contract = GenerateContract()
             });
         }
 
@@ -73,6 +71,10 @@ public class TestDataGenerator
     private string GeneratePhoneNumber()
     {
         return $"77{random.Next(10000000, 99999999)}";
+    }
+    private string GenerateContract()
+    {
+        return $"dsadsa{random.Next(10000000, 99999999)}";
     }
 
     private string GeneratePassport()
