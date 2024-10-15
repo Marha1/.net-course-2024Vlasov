@@ -21,7 +21,6 @@ public class EquivalenceTests
         {
             Name = existingClient.Name,
             Surname = existingClient.Surname,
-            Age = existingClient.Age,
             PhoneNumber = existingClient.PhoneNumber
         };
         
@@ -43,7 +42,6 @@ public class EquivalenceTests
         {
             Name = existingClient.Name,
             Surname = existingClient.Surname,
-            Age = existingClient.Age,
             PhoneNumber = existingClient.PhoneNumber
         };
 
@@ -73,7 +71,6 @@ public class EquivalenceTests
         {
             Name = existingEmployee.Name,
             Surname = existingEmployee.Surname,
-            Age = existingEmployee.Age,
             PhoneNumber = existingEmployee.PhoneNumber,
             Expirence = existingEmployee.Expirence,
             Salary = existingEmployee.Salary
