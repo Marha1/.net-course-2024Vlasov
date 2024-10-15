@@ -1,20 +1,24 @@
-namespace BankSystemDomain.Models;
+using System;
+using System.Collections.Generic;
 
-public class Client : Person
+namespace BankSystemDomain.Models
 {
-    public List<Account> Accounts { get; set; } = new();
-
-    public override bool Equals(object? obj)
+    public class Client : Person
     {
-        if (obj is not Client client)
-            return false;
+        public List<Account> Accounts { get; set; } = new();
 
-        return Name == client.Name && Surname == client.Surname && Age == client.Age &&
-               PhoneNumber == client.PhoneNumber;
-    }
+        public override bool Equals(object? obj)
+        {
+            if (obj is not Client client)
+                return false;
 
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(Name, Surname, Age, PhoneNumber);
+            return Name == client.Name && Surname == client.Surname && Age == client.Age &&
+                   PhoneNumber == client.PhoneNumber;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Name, Surname, Age, PhoneNumber);
+        }
     }
 }
