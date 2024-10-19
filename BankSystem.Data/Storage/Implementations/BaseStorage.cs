@@ -1,77 +1,65 @@
-using BankSystem.App.Exceptions;
 using BankSystem.Data.Storage.Interfaces;
 using BankSystemDomain.Models;
 
 namespace BankSystem.Data.Storage.Implementations;
 
-public abstract class BaseStorage<T> : IBaseStorage<T> where T: Person
+public abstract class BaseStorage<T> : IBaseStorage<T> where T : Person
 {
-    private readonly List<T> _items; 
+    private readonly BankSystemDbContext _context;
 
-    internal BaseStorage()
+    protected BaseStorage(BankSystemDbContext context)
     {
-        _items = new List<T>();
+        _context = context;
     }
-    public void Add(T entity)
-    {
-        ValidateEntity(entity); 
 
-        if (_items.Contains(entity))
-        {
+    public virtual  void Add(T entity)
+    {
+        if (_context.Set<T>().Any(e => e.Equals(entity)))
             throw new Exception($"{typeof(T).Name} уже существует.");
-        }
-        
-        _items.Add(entity);
+
+        _context.Set<T>().Add(entity);
+        _context.SaveChanges();
     }
 
-    public bool Update(T entity)
+    public virtual  bool Update(T entity)
     {
-        ValidateEntity(entity);
+        var existingEntity = _context.Set<T>().Find(entity.Id);
+        if (existingEntity == null) throw new Exception($"{typeof(T).Name} не найден.");
 
-        var itemToUpdate = _items.FirstOrDefault(entity);
-        if (itemToUpdate == null)
-        {
-            throw new Exception($"{typeof(T).Name} не найден.");
-        }
+        _context.Entry(existingEntity).CurrentValues.SetValues(entity);
+        _context.SaveChanges();
 
-        _items.Remove(itemToUpdate);
-        _items.Add(entity); 
-
-        return  true;
-    }
-
-    public bool Delete(T entity)
-    {
-        var itemToRemove = _items.FirstOrDefault(entity);
-        if (itemToRemove == null)
-        {
-            throw new Exception($"{typeof(T).Name} не найден.");
-        }
-
-        _items.Remove(itemToRemove);
         return true;
     }
 
-    public IReadOnlyList<T> GetEntities(int pageNumber, int pageSize)
+    public virtual  bool Delete(T entity)
     {
-       
-        return _items
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .ToList()
-            .AsReadOnly();
+        var existingEntity = _context.Set<T>().Find(entity.Id);
+        if (existingEntity == null) throw new Exception($"{typeof(T).Name} не найден.");
+
+        _context.Set<T>().Remove(existingEntity);
+        _context.SaveChanges();
+
+        return true;
     }
 
-    protected virtual void ValidateEntity(T entity)
+    public virtual  IReadOnlyList<T> GetEntities(int pageNumber, int pageSize, Func<IQueryable<T>, IQueryable<T>> filter = null)
     {
-        if (entity.Age < 18)
-        {
-            throw new AgeException("Моложе 18 лет!");
-        }
+        IQueryable<T> query = _context.Set<T>();
 
-        if (entity is Client client && string.IsNullOrEmpty(client.PassportDetails)||entity is Employee employ && string.IsNullOrEmpty(employ.PassportDetails))
-        {
-            throw new PassportException("Паспортные данные отсутствуют.");
-        }
+        if (filter != null) query = filter(query);
+
+        var result = query
+            .OrderBy(x => x.Name)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+
+        return result.AsReadOnly();
+    }
+
+    public T GetById(Guid id)
+    {
+        return _context.Set<T>().FirstOrDefault(c => c.Id == id) ?? throw new Exception($"Сущность с Id {id} не найдена.");
     }
 }

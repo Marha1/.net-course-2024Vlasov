@@ -1,119 +1,114 @@
 using BankSystem.Data.Storage.Interfaces;
 using BankSystemDomain.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace BankSystem.Data.Storage.Implementations;
 
 public class ClientStorage : BaseStorage<Client>, IClientStorage
 {
-    private readonly  Dictionary<Client, List<Account>> _clientAccounts;
-    
-    public ClientStorage()
+    private readonly BankSystemDbContext _context;
+
+    public ClientStorage(BankSystemDbContext context) : base(context)
     {
-        _clientAccounts = new Dictionary<Client, List<Account>>();
-    }
-    
-    public List<Client> GetByFilter(string? name, string? phoneNumber, string? passportDetails, DateTime? birthDateFrom,
-        DateTime? birthDateTo, int pageNumber, int pageSize)
-    {
-        var query = GetEntities(1,2).AsQueryable();
-
-        if (!string.IsNullOrEmpty(name))
-        {
-            query = query.Where(client => client.Name.Contains(name) || client.Surname.Contains(name));
-        }
-
-        if (!string.IsNullOrEmpty(phoneNumber))
-        {
-            query = query.Where(client => client.PhoneNumber == phoneNumber);
-        }
-
-        if (!string.IsNullOrEmpty(passportDetails))
-        {
-            query = query.Where(client => client.PassportDetails == passportDetails);
-        }
-
-        if (birthDateFrom.HasValue)
-        {
-            query = query.Where(client => client.BirthDate >= birthDateFrom);
-        }
-
-        if (birthDateTo.HasValue)
-        {
-            query = query.Where(client => client.BirthDate <= birthDateTo);
-        }
-
-        query = query.Skip((pageNumber - 1) * pageSize).Take(pageSize);
-
-        return query.ToList();    
+        _context = context;
     }
 
-    public void AddAccount(string phoneNumber, Account newAccount)
+    public override void Add(Client client)
     {
-        var client = GetEntities(1, 10).FirstOrDefault(c => c.PhoneNumber == phoneNumber);
-        if (client == null)
+        if (_context.Clients.Any(e => e.Equals(client)))
         {
-            throw new Exception($"Клиент с номером телефона {phoneNumber} не найден.");
+            throw new Exception($"Клиент с именем {client.Name} уже существует.");
         }
 
-        if (!_clientAccounts.ContainsKey(client)|| _clientAccounts.Count==0)
+        var usdCurrency = _context.Currencies.FirstOrDefault(c => c.Name == "USD");
+        if (usdCurrency == null)
         {
-            _clientAccounts[client] = new List<Account>();
+            usdCurrency = new Currency { Name = "USD" };
+            _context.Currencies.Add(usdCurrency);
+            _context.SaveChanges(); 
         }
 
-        var existingAccount = _clientAccounts[client].FirstOrDefault(a => a.Currency.Name == newAccount.Currency.Name);
-        if (existingAccount != null)
+        if (client.Accounts == null)
         {
-            throw new Exception($"Счёт с валютой {newAccount.Currency.Name} уже существует для клиента.");
+            client.Accounts = new List<Account>();
         }
 
-        _clientAccounts[client].Add(newAccount);
+        AddDefaultAccountIfNotExists(client, usdCurrency.Id);
+
+        base.Add(client);
     }
-
-
-    public bool UpdateAccount(string phoneNumber, Account updatedAccount)
+    private void AddDefaultAccountIfNotExists(Client client, Guid usdCurrencyId)
+    {
+        if (!client.Accounts.Any(a => a.CurrencyId == usdCurrencyId))
         {
-            var client = _clientAccounts.Keys.FirstOrDefault(c => c.PhoneNumber == phoneNumber);
-            if (client == null)
+            client.Accounts.Add(new Account
             {
-                throw new Exception($"Клиент с номером телефона {phoneNumber} не найден.");
-            }
-
-            var accountToUpdate = _clientAccounts[client].FirstOrDefault(a => a.Currency.Name == updatedAccount.Currency.Name);
-            if (accountToUpdate == null)
-            {
-                throw new Exception($"Счёт с валютой {updatedAccount.Currency.Name} не найден для клиента.");
-            }
-
-            accountToUpdate.Amount = updatedAccount.Amount;
-            accountToUpdate.Currency = updatedAccount.Currency;
-            return true;
+                Amount = 0,
+                CurrencyId = usdCurrencyId 
+            });
         }
+    }
 
-    public bool DeleteAccount(string phoneNumber, string currency)
+    public void AddAccount(Guid id, Account newAccount)
     {
-        var client = _clientAccounts.Keys.FirstOrDefault(c => c.PhoneNumber == phoneNumber);
-        if (client == null)
-        {
-            throw new Exception($"Клиент с номером телефона {phoneNumber} не найден.");
-        }
+        var existingClient = _context.Clients
+            .Include(c => c.Accounts)
+            .FirstOrDefault(c => c.Id == id);
 
-        var accountToRemove = _clientAccounts[client].FirstOrDefault(a => a.Currency.Name == currency);
-        if (accountToRemove == null)
-        {
-            throw new Exception("Счет не найден.");
-        }
+        if (existingClient == null) throw new Exception($"Клиент не найден.");
 
-        _clientAccounts[client].Remove(accountToRemove);
+        var existingAccount = existingClient.Accounts.FirstOrDefault(a => a.CurrencyId == newAccount.CurrencyId);
+        if (existingAccount != null) 
+            throw new Exception("Счёт с указанной валютой уже существует для клиента.");
+
+        existingClient.Accounts.Add(newAccount);
+        _context.SaveChanges();
+    }
+
+    public bool UpdateAccount(Guid Id, Account updatedAccount)
+    {
+        var existingClient = _context.Clients
+            .Include(c => c.Accounts)
+            .FirstOrDefault(c => c.Id == Id);
+
+        if (existingClient == null) throw new Exception($"Клиент не найден.");
+
+        var accountToUpdate = existingClient.Accounts.FirstOrDefault(a => a.CurrencyId == updatedAccount.CurrencyId);
+        if (accountToUpdate == null) throw new Exception("Счёт с указанной валютой не найден для клиента.");
+
+        accountToUpdate.Amount = updatedAccount.Amount;
+        _context.SaveChanges();
+
         return true;
     }
-    public List<Account> GetAccountsByPhoneNumber(string phoneNumber)
-    {
-        var client = _clientAccounts.Keys.FirstOrDefault(c => c.PhoneNumber == phoneNumber);
-        if (client == null)
-        {
-            throw new Exception($"Клиент с номером телефона {phoneNumber} не найден.");
-        }
 
-        return _clientAccounts[client];
+    public bool DeleteAccount(Guid Id, Guid currencyId)
+    {
+        var existingClient = _context.Clients
+            .Include(c => c.Accounts)
+            .FirstOrDefault(c => c.Id ==Id);
+
+        if (existingClient == null) throw new Exception($"Клиент не найден.");
+
+        var accountToRemove = existingClient.Accounts.FirstOrDefault(a => a.CurrencyId == currencyId);
+        if (accountToRemove == null) throw new Exception("Счёт не найден.");
+
+        existingClient.Accounts.Remove(accountToRemove);
+        _context.SaveChanges();
+
+        return true;
     }
+
+    public List<Account> GetAccountsByClient(Client client)
+    {
+        var existingClient = _context.Clients
+            .Include(c => c.Accounts)
+            .ThenInclude(a => a.Currency)
+            .FirstOrDefault(c => c.Id == client.Id);
+
+        if (existingClient == null) throw new Exception($"Клиент {client.Name} не найден.");
+
+        return existingClient.Accounts;
+    }
+    
 }

@@ -1,3 +1,4 @@
+using BankSystem.App.Exceptions;
 using BankSystem.App.Services.Interfaces;
 using BankSystem.Data.Storage.Interfaces;
 using BankSystemDomain.Models;
@@ -13,29 +14,51 @@ public class ClientService : BaseService<Client>, IClientService
         _clientStorage = clientStorage;
     }
 
-    public List<Client> GetClientsByFilter(string? name, string? phoneNumber, string? passportDetails,
-        DateTime? birthDateFrom, DateTime? birthDateTo, int pageNumber, int pageSize)
+    public override void Add(Client client)
     {
-        return _clientStorage.GetByFilter(name, phoneNumber, passportDetails, birthDateFrom, birthDateTo, pageNumber, pageSize);
-    }
-
-    public void AddAccountToClient(string phoneNumber, Account account)
-    {
-        _clientStorage.AddAccount(phoneNumber, account);
-    }
-
-    public bool UpdateClientAccount(string phoneNumber, Account account)
-    {
-        return _clientStorage.UpdateAccount(phoneNumber, account);
-    }
-
-    public bool DeleteClientAccount(string phoneNumber, string currency)
-    {
-        return _clientStorage.DeleteAccount(phoneNumber, currency);
+        if (client.Age < 18)
+            throw new AgeException("Возраст клиента должен быть не менее 18 лет.");
         
+        if (string.IsNullOrWhiteSpace(client.PassportDetails))
+            throw new PassportException("Паспортные данные клиента отсутствуют.");
+
+        base.Add(client);
     }
-    public List<Account> GetAccountsByPhoneNumber(string phoneNumber)
+    public void AddAccount(Guid id, Account newAccount)
     {
-        return _clientStorage.GetAccountsByPhoneNumber(phoneNumber);
+        if (id == Guid.Empty)
+            throw new ArgumentException("Id не может быть пустым.", nameof(id));
+
+        if (newAccount == null)
+            throw new ArgumentNullException(nameof(newAccount), "Счет не может быть null.");
+
+        _clientStorage.AddAccount(id, newAccount);
+    }
+
+    public bool UpdateAccount(Guid id, Account updatedAccount)
+    {
+        if (id == Guid.Empty)
+            throw new ArgumentException("Id не может быть пустым.", nameof(id));
+
+        if (updatedAccount == null)
+            throw new ArgumentNullException(nameof(updatedAccount), "Счет не может быть null.");
+
+        return _clientStorage.UpdateAccount(id, updatedAccount);
+    }
+
+    public bool DeleteAccount(Guid id, Guid currencyId)
+    {
+        if (id == Guid.Empty)
+            throw new ArgumentException("Id не может быть пустым.", nameof(id));
+
+        return _clientStorage.DeleteAccount(id, currencyId);
+    }
+
+    public List<Account> GetAccountsByClient(Client client)
+    {
+        if (client == null)
+            throw new ArgumentNullException(nameof(client), "Клиент не может быть null.");
+
+        return _clientStorage.GetAccountsByClient(client);
     }
 }

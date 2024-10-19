@@ -7,7 +7,8 @@ public interface IBaseService<T> where T : Person
     void Add(T entity);
     bool Update(T entity);
     bool Delete(T entity);
-    IReadOnlyList<T> GetEntities(int pageNumber, int pageSize);
+    IReadOnlyList<T> GetEntities(int pageNumber, int pageSize, Func<IQueryable<T>, IQueryable<T>> filter = null);
+    T GetById(Guid Id);
 
 
 }
