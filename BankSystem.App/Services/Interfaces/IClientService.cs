@@ -8,6 +8,4 @@ public interface IClientService : IBaseService<Client>
     public bool UpdateAccount(Guid id, Account updatedAccount);
     public bool DeleteAccount(Guid id, Guid currencyId);
     public List<Account> GetAccountsByClient(Client client);
-    public Client GetById(Guid Id);
-
 }

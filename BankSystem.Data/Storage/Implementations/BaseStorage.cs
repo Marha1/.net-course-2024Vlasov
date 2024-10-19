@@ -57,4 +57,9 @@ public abstract class BaseStorage<T> : IBaseStorage<T> where T : Person
 
         return result.AsReadOnly();
     }
+
+    public T GetById(Guid id)
+    {
+        return _context.Set<T>().FirstOrDefault(c => c.Id == id) ?? throw new Exception($"Сущность с Id {id} не найдена.");
+    }
 }

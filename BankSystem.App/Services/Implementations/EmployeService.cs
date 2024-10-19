@@ -11,9 +11,4 @@ public class EmployeService : BaseService<Employee>, IEmployeeService
     {
         _employStorage = employeeStorage;
     }
-    public Employee GetById(Guid id)
-    {
-        
-       return _employStorage.GetById(id);
-    }
 }

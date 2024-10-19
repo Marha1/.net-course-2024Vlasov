@@ -11,10 +11,5 @@ public class EmployeeStorage: BaseStorage<Employee>, IEmployeeStorage
     {
         _context = context;
     }
-
-    public Employee GetById(Guid id)
-    {
-        return _context.Employees.FirstOrDefault(c=>c.Id==id) ?? throw new Exception($"Клиент не найден.");;
-
-    }
+    
 }

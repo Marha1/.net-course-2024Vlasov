@@ -110,9 +110,5 @@ public class ClientStorage : BaseStorage<Client>, IClientStorage
 
         return existingClient.Accounts;
     }
-
-    public Client GetById(Guid id)
-    {
-        return _context.Clients.FirstOrDefault(c=>c.Id==id) ?? throw new Exception($"Клиент не найден.");;
-    }
+    
 }

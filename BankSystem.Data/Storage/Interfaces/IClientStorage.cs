@@ -8,5 +8,4 @@ public interface IClientStorage: IBaseStorage<Client>
     public bool UpdateAccount(Guid Id, Account updatedAccount);
     public bool DeleteAccount(Guid Id, Guid currencyId);
     public List<Account> GetAccountsByClient(Client client);
-    public Client  GetById(Guid id);
 }
