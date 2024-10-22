@@ -1,8 +1,9 @@
 using System.Globalization;
 using BankSystem.App.Services.Interfaces;
 using CsvHelper;
+using Newtonsoft.Json; 
 
-public class ExportService<T> 
+public class ExportService<T>
 {
     private readonly IBaseService<T> _storageService;
     private string _pathToDirectory { get; set; }
@@ -17,7 +18,7 @@ public class ExportService<T>
 
     public void Export(List<T> entities)
     {
-        Directory.CreateDirectory(_pathToDirectory); 
+        Directory.CreateDirectory(_pathToDirectory);
 
         string fullPath = Path.Combine(_pathToDirectory, _csvFileName);
 
@@ -48,7 +49,80 @@ public class ExportService<T>
             var entities = csv.GetRecords<T>().ToList();
             foreach (var entity in entities)
             {
-                _storageService.Add(entity); 
+                _storageService.Add(entity);
+            }
+        }
+    }
+    
+    public void ExportEntitiesToJson(IEnumerable<T> entities, string filePath)
+    {
+        if (entities == null)
+            throw new Exception("The collection cannot be null.");
+
+        var json = JsonConvert.SerializeObject(entities, Formatting.Indented);
+
+        using (var streamWriter = new StreamWriter(filePath))
+        {
+            streamWriter.Write(json);
+        }
+    }
+
+    public ICollection<T> ImportEntitiesFromJson(string filePath)
+    {
+        if (!File.Exists(filePath))
+            throw new FileNotFoundException("The specified file was not found.");
+
+        using (var streamReader = new StreamReader(filePath))
+        {
+            var json = streamReader.ReadToEnd();
+            var entities = JsonConvert.DeserializeObject<ICollection<T>>(json);
+
+            if (entities != null)
+            {
+                foreach (var entity in entities)
+                {
+                    _storageService.Add(entity);  
+                }
+                return entities;
+            }
+            else
+            {
+                throw new Exception("Failed to deserialize JSON.");
+            }
+        }
+    }
+
+    public void ExportEntityToJson(T entity, string filePath)
+    {
+        if (entity == null)
+            throw new Exception("The entity cannot be null.");
+
+        var json = JsonConvert.SerializeObject(entity, Formatting.Indented);
+
+        using (var streamWriter = new StreamWriter(filePath))
+        {
+            streamWriter.Write(json);
+        }
+    }
+
+    public T ImportEntityFromJson(string filePath)
+    {
+        if (!File.Exists(filePath))
+            throw new FileNotFoundException("The specified file was not found.");
+
+        using (var streamReader = new StreamReader(filePath))
+        {
+            var json = streamReader.ReadToEnd();
+            var entity = JsonConvert.DeserializeObject<T>(json);
+
+            if (entity != null)
+            {
+                _storageService.Add(entity);  
+                return entity;
+            }
+            else
+            {
+                throw new Exception("Failed to deserialize JSON.");
             }
         }
     }
