@@ -1,56 +1,36 @@
 using System.Globalization;
-using BankSystem.App.Services;
-using BankSystem.App.Services.Implementations;
-using BankSystem.Data;
-using BankSystem.Data.Storage.Implementations;
-using BankSystemDomain.Models;
+using BankSystem.App.Services.Interfaces;
 using CsvHelper;
 
-namespace ExportTool;
-
-public class ExportService
+public class ExportService<T> 
 {
-    private readonly ClientService _clientService;
-    private readonly BankSystemDbContext _context;
-    private readonly ClientStorage _storage;
-    private string _pathToDirecory { get; set; }
+    private readonly IBaseService<T> _storageService;
+    private string _pathToDirectory { get; set; }
     private string _csvFileName { get; set; }
-    public ExportService(string pathToDirectory, string csvFileName)
+
+    public ExportService(IBaseService<T> storageService, string pathToDirectory, string csvFileName)
     {
-        _pathToDirecory =  pathToDirectory;
-        _csvFileName =  csvFileName;
-        _context = new BankSystemDbContext(); 
-        _storage = new ClientStorage(_context);
-        _clientService = new ClientService(_storage);
+        _storageService = storageService;
+        _pathToDirectory = pathToDirectory;
+        _csvFileName = csvFileName;
     }
 
-    
-    public void Export(List<Client> clients)
+    public void Export(List<T> entities)
     {
-        DirectoryInfo dirInfo = new DirectoryInfo(_pathToDirecory);
-        if (!dirInfo.Exists)
-        {
-            dirInfo.Create();
-        }
+        Directory.CreateDirectory(_pathToDirectory); 
 
-        string fullPath = Path.Combine(_pathToDirecory, _csvFileName);
-        
-        using (FileStream fileStream = new FileStream(fullPath, FileMode.Create))
+        string fullPath = Path.Combine(_pathToDirectory, _csvFileName);
+
+        using (var streamWriter = new StreamWriter(fullPath))
+        using (var writer = new CsvWriter(streamWriter, CultureInfo.InvariantCulture))
         {
-            using (StreamWriter streamWriter = new StreamWriter(fileStream))
+            writer.WriteHeader<T>();
+            writer.NextRecord();
+
+            foreach (var entity in entities)
             {
-                using (var writer = new CsvWriter(streamWriter, CultureInfo.InvariantCulture))
-                {
-                   
-                    writer.WriteHeader<Client>();
-                    writer.NextRecord();
-
-                    foreach (var client in clients)
-                    {
-                        writer.WriteRecord(client);
-                        writer.NextRecord();
-                    }
-                }
+                writer.WriteRecord(entity);
+                writer.NextRecord();
             }
         }
     }
@@ -61,17 +41,14 @@ public class ExportService
         {
             throw new FileNotFoundException("CSV файл не найден.");
         }
+
         using (var reader = new StreamReader(filePath))
+        using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
         {
-            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+            var entities = csv.GetRecords<T>().ToList();
+            foreach (var entity in entities)
             {
-
-                var clients = csv.GetRecords<Client>().ToList();
-
-                foreach (var client in clients)
-                {
-                    _clientService.Add(client);  
-                }
+                _storageService.Add(entity); 
             }
         }
     }

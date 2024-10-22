@@ -2,7 +2,7 @@ using BankSystemDomain.Models;
 
 namespace BankSystem.App.Services.Interfaces;
 
-public interface IBaseService<T> where T : Person
+public interface IBaseService<T> 
 {
     void Add(T entity);
     bool Update(T entity);
