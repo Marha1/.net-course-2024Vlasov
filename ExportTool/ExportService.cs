@@ -49,7 +49,7 @@ public class ExportService<T>
             var entities = csv.GetRecords<T>().ToList();
             foreach (var entity in entities)
             {
-                _storageService.Add(entity);
+                _storageService.AddAsync(entity);
             }
         }
     }
@@ -81,7 +81,7 @@ public class ExportService<T>
             {
                 foreach (var entity in entities)
                 {
-                    _storageService.Add(entity);  
+                    _storageService.AddAsync(entity);  
                 }
                 return entities;
             }
@@ -117,7 +117,7 @@ public class ExportService<T>
 
             if (entity != null)
             {
-                _storageService.Add(entity);  
+                _storageService.AddAsync(entity);  
                 return entity;
             }
             else

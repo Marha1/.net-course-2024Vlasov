@@ -14,17 +14,18 @@ public class ClientService : BaseService<Client>, IClientService
         _clientStorage = clientStorage;
     }
 
-    public override void Add(Client client)
+    public override async Task AddAsync(Client client)
     {
         if (client.Age < 18)
             throw new AgeException("Возраст клиента должен быть не менее 18 лет.");
-        
+
         if (string.IsNullOrWhiteSpace(client.PassportDetails))
             throw new PassportException("Паспортные данные клиента отсутствуют.");
 
-        base.Add(client);
+        await _clientStorage.AddAsync(client);
     }
-    public void AddAccount(Guid id, Account newAccount)
+
+    public async Task AddAccountAsync(Guid id, Account newAccount)
     {
         if (id == Guid.Empty)
             throw new ArgumentException("Id не может быть пустым.", nameof(id));
@@ -32,10 +33,10 @@ public class ClientService : BaseService<Client>, IClientService
         if (newAccount == null)
             throw new ArgumentNullException(nameof(newAccount), "Счет не может быть null.");
 
-        _clientStorage.AddAccount(id, newAccount);
+        await _clientStorage.AddAccountAsync(id, newAccount);
     }
 
-    public bool UpdateAccount(Guid id, Account updatedAccount)
+    public async Task<bool> UpdateAccountAsync(Guid id, Account updatedAccount,CancellationToken cancellationToken)
     {
         if (id == Guid.Empty)
             throw new ArgumentException("Id не может быть пустым.", nameof(id));
@@ -43,22 +44,49 @@ public class ClientService : BaseService<Client>, IClientService
         if (updatedAccount == null)
             throw new ArgumentNullException(nameof(updatedAccount), "Счет не может быть null.");
 
-        return _clientStorage.UpdateAccount(id, updatedAccount);
+        return await _clientStorage.UpdateAccountAsync(id,updatedAccount,cancellationToken);
     }
 
-    public bool DeleteAccount(Guid id, Guid currencyId)
+    public async Task<bool> DeleteAccountAsync(Guid id, Guid currencyId)
     {
         if (id == Guid.Empty)
             throw new ArgumentException("Id не может быть пустым.", nameof(id));
 
-        return _clientStorage.DeleteAccount(id, currencyId);
+        return await _clientStorage.DeleteAccountAsync(id, currencyId);
     }
+    
 
-    public List<Account> GetAccountsByClient(Client client)
+    public async Task<List<Account>> GetAccountsByClientAsync(Client client)
     {
         if (client == null)
             throw new ArgumentNullException(nameof(client), "Клиент не может быть null.");
 
-        return _clientStorage.GetAccountsByClient(client);
+        return await _clientStorage.GetAccountsByClientAsync(client);
     }
+
+    public async Task WithdrawAsync(Dictionary<Guid, decimal> withdrawalRequests, CancellationToken cancellationToken)
+    {
+        var tasks = new List<Task>();
+
+        foreach (var request in withdrawalRequests)
+        {
+            Guid clientId = request.Key;
+            decimal amountToWithdraw = request.Value;
+
+            tasks.Add(Task.Run(async () =>
+            {
+                var account = await _clientStorage.GetAccountByIdAsync(clientId, cancellationToken);
+
+                if (account != null && account.Amount >= amountToWithdraw)
+                {
+                    account.Amount -= amountToWithdraw;
+                    await _clientStorage.UpdateAccountAsync(account.Id, account, cancellationToken);
+                }
+            }, cancellationToken));
+        }
+
+        await Task.WhenAll(tasks);
+    }
+
+   
 }

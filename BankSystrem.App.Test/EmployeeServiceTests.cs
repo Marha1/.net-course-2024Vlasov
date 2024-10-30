@@ -2,7 +2,10 @@ using BankSystem.App.Services;
 using BankSystem.App.Services.Implementations;
 using BankSystem.Data;
 using BankSystem.Data.Storage.Implementations;
+using BankSystemDomain.Models;
 using Xunit;
+using System.Linq;
+using System.Threading.Tasks;
 
 public class EmployeeServiceTests
 {
@@ -20,46 +23,47 @@ public class EmployeeServiceTests
     }
 
     [Fact]
-    public void AddEmployee_Success_Test()
+    public async Task AddEmployee_Success_Test()
     {
         // Arrange
         var employee = _dataGenerator.GenerateEmployees(1).First();
         employee.PassportDetails = "987654321";
+
         // Act
-        _employeeService.Add(employee);
+        await _employeeService.AddAsync(employee);
 
         // Assert
-        var addedEmployee = _employeeService.GetById(employee.Id);
+        var addedEmployee = await _employeeService.GetByIdAsync(employee.Id);
         Assert.NotNull(addedEmployee);
     }
 
     [Fact]
-    public void DeleteEmployee_Success_Test()
+    public async Task DeleteEmployee_Success_Test()
     {
         // Arrange
         var employee = _dataGenerator.GenerateEmployees(1).First();
         employee.PassportDetails = "987654321";
-        _employeeService.Add(employee);
+        await _employeeService.AddAsync(employee);
 
         // Act
-        var result = _employeeService.Delete(employee);
+        var result = await _employeeService.DeleteAsync(employee);
 
         // Assert
         Assert.True(result);
     }
 
     [Fact]
-    public void UpdateEmployee_Success_Test()
+    public async Task UpdateEmployee_Success_Test()
     {
         // Arrange
         var employee = _dataGenerator.GenerateEmployees(1).First();
         employee.PassportDetails = "987654321";
-        _employeeService.Add(employee);
+        await _employeeService.AddAsync(employee);
 
         employee.Name = "Updated Name";
 
         // Act
-        var result = _employeeService.Update(employee);
+        var result = await _employeeService.UpdateAsync(employee);
 
         // Assert
         Assert.True(result);

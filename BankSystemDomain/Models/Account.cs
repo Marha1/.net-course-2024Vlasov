@@ -6,7 +6,7 @@ namespace BankSystemDomain.Models
         public Guid CurrencyId { get; set; }
         public Currency Currency { get; set; }
         public decimal Amount { get; set; }
-        
+        public DateTime LastUpdatedDate { get; set; }
         public Guid ClientId { get; set; }
         public Client Client { get; set; }
     }

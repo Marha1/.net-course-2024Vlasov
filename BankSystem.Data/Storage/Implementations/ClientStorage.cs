@@ -1,114 +1,135 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using BankSystem.Data.Storage.Interfaces;
 using BankSystemDomain.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace BankSystem.Data.Storage.Implementations;
-
-public class ClientStorage : BaseStorage<Client>, IClientStorage
+namespace BankSystem.Data.Storage.Implementations
 {
-    private readonly BankSystemDbContext _context;
-
-    public ClientStorage(BankSystemDbContext context) : base(context)
+    public class ClientStorage : BaseStorage<Client>, IClientStorage
     {
-        _context = context;
-    }
+        private readonly BankSystemDbContext _context;
 
-    public override void Add(Client client)
-    {
-        if (_context.Clients.Any(e => e.Equals(client)))
+        public ClientStorage(BankSystemDbContext context) : base(context)
         {
-            throw new Exception($"Клиент с именем {client.Name} уже существует.");
+            _context = context;
         }
 
-        var usdCurrency = _context.Currencies.FirstOrDefault(c => c.Name == "USD");
-        if (usdCurrency == null)
+        public override async Task AddAsync(Client client)
         {
-            usdCurrency = new Currency { Name = "USD" };
-            _context.Currencies.Add(usdCurrency);
-            _context.SaveChanges(); 
-        }
-
-        if (client.Accounts == null)
-        {
-            client.Accounts = new List<Account>();
-        }
-
-        AddDefaultAccountIfNotExists(client, usdCurrency.Id);
-
-        base.Add(client);
-    }
-    private void AddDefaultAccountIfNotExists(Client client, Guid usdCurrencyId)
-    {
-        if (!client.Accounts.Any(a => a.CurrencyId == usdCurrencyId))
-        {
-            client.Accounts.Add(new Account
+            if (await _context.Clients.AnyAsync(e => e.Equals(client)))
             {
-                Amount = 0,
-                CurrencyId = usdCurrencyId 
-            });
+                throw new Exception($"Клиент с именем {client.Name} уже существует.");
+            }
+
+            var usdCurrency = await _context.Currencies.FirstOrDefaultAsync(c => c.Name == "USD");
+            if (usdCurrency == null)
+            {
+                usdCurrency = new Currency { Name = "USD" };
+                await _context.Currencies.AddAsync(usdCurrency);
+                await _context.SaveChangesAsync(); 
+            }
+
+            client.Accounts ??= new List<Account>();
+
+            AddDefaultAccountIfNotExists(client, usdCurrency.Id);
+
+            await base.AddAsync(client);
+        }
+
+        private void AddDefaultAccountIfNotExists(Client client, Guid usdCurrencyId)
+        {
+            if (!client.Accounts.Any(a => a.CurrencyId == usdCurrencyId))
+            {
+                client.Accounts.Add(new Account
+                {
+                    Amount = 0,
+                    CurrencyId = usdCurrencyId
+                });
+            }
+        }
+
+        public async Task AddAccountAsync(Guid id, Account newAccount)
+        {
+            var existingClient = await _context.Clients
+                .Include(c => c.Accounts)
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+            if (existingClient == null) throw new Exception("Клиент не найден.");
+
+            if (existingClient.Accounts.Any(a => a.CurrencyId == newAccount.CurrencyId))
+                throw new Exception("Счёт с указанной валютой уже существует для клиента.");
+
+            existingClient.Accounts.Add(newAccount);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<bool> UpdateAccountAsync(Guid id, Account updatedAccount,CancellationToken cancellationToken)
+        {
+            var existingClient = await _context.Clients
+                .Include(c => c.Accounts)
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+            if (existingClient == null) throw new Exception("Клиент не найден.");
+
+            var accountToUpdate = existingClient.Accounts.FirstOrDefault(a => a.CurrencyId == updatedAccount.CurrencyId);
+            if (accountToUpdate == null) throw new Exception("Счёт с указанной валютой не найден для клиента.");
+
+            accountToUpdate.Amount = updatedAccount.Amount;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+        public async Task<bool> UpdateAccountAsync(Account account, CancellationToken cancellationToken)
+        {
+            var exAccount = await _context.Accounts.FirstOrDefaultAsync(x => x.Id == account.Id);
+
+            if (exAccount == null)
+                throw new Exception("Account not found.");
+
+            exAccount.Amount = account.Amount;
+            await _context.SaveChangesAsync(cancellationToken);
+            return true;
+        }
+
+        public async Task<Account> GetAccountByIdAsync(Guid clientId, CancellationToken cancellationToken)
+        {
+            return await _context.Accounts
+                .FirstOrDefaultAsync(account => account.Id == clientId, cancellationToken);
+        }
+
+        public async Task<bool> DeleteAccountAsync(Guid id, Guid currencyId)
+        {
+            var existingClient = await _context.Clients
+                .Include(c => c.Accounts)
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+            if (existingClient == null) throw new Exception("Клиент не найден.");
+
+            var accountToRemove = existingClient.Accounts.FirstOrDefault(a => a.CurrencyId == currencyId);
+            if (accountToRemove == null) throw new Exception("Счёт не найден.");
+
+            existingClient.Accounts.Remove(accountToRemove);
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+        public async Task<ICollection<Account>> GetAllAccount(CancellationToken cancellationToken)
+        {
+            return await _context.Accounts.ToListAsync();
+        }
+
+        public async Task<List<Account>> GetAccountsByClientAsync(Client client)
+        {
+            var existingClient = await _context.Clients
+                .Include(c => c.Accounts)
+                .ThenInclude(a => a.Currency)
+                .FirstOrDefaultAsync(c => c.Id == client.Id);
+
+            if (existingClient == null) throw new Exception($"Клиент {client.Name} не найден.");
+
+            return existingClient.Accounts;
         }
     }
-
-    public void AddAccount(Guid id, Account newAccount)
-    {
-        var existingClient = _context.Clients
-            .Include(c => c.Accounts)
-            .FirstOrDefault(c => c.Id == id);
-
-        if (existingClient == null) throw new Exception($"Клиент не найден.");
-
-        var existingAccount = existingClient.Accounts.FirstOrDefault(a => a.CurrencyId == newAccount.CurrencyId);
-        if (existingAccount != null) 
-            throw new Exception("Счёт с указанной валютой уже существует для клиента.");
-
-        existingClient.Accounts.Add(newAccount);
-        _context.SaveChanges();
-    }
-
-    public bool UpdateAccount(Guid Id, Account updatedAccount)
-    {
-        var existingClient = _context.Clients
-            .Include(c => c.Accounts)
-            .FirstOrDefault(c => c.Id == Id);
-
-        if (existingClient == null) throw new Exception($"Клиент не найден.");
-
-        var accountToUpdate = existingClient.Accounts.FirstOrDefault(a => a.CurrencyId == updatedAccount.CurrencyId);
-        if (accountToUpdate == null) throw new Exception("Счёт с указанной валютой не найден для клиента.");
-
-        accountToUpdate.Amount = updatedAccount.Amount;
-        _context.SaveChanges();
-
-        return true;
-    }
-
-    public bool DeleteAccount(Guid Id, Guid currencyId)
-    {
-        var existingClient = _context.Clients
-            .Include(c => c.Accounts)
-            .FirstOrDefault(c => c.Id ==Id);
-
-        if (existingClient == null) throw new Exception($"Клиент не найден.");
-
-        var accountToRemove = existingClient.Accounts.FirstOrDefault(a => a.CurrencyId == currencyId);
-        if (accountToRemove == null) throw new Exception("Счёт не найден.");
-
-        existingClient.Accounts.Remove(accountToRemove);
-        _context.SaveChanges();
-
-        return true;
-    }
-
-    public List<Account> GetAccountsByClient(Client client)
-    {
-        var existingClient = _context.Clients
-            .Include(c => c.Accounts)
-            .ThenInclude(a => a.Currency)
-            .FirstOrDefault(c => c.Id == client.Id);
-
-        if (existingClient == null) throw new Exception($"Клиент {client.Name} не найден.");
-
-        return existingClient.Accounts;
-    }
-    
 }
