@@ -2,10 +2,13 @@ using BankSystemDomain.Models;
 
 namespace BankSystem.Data.Storage.Interfaces;
 
-public interface IClientStorage: IBaseStorage<Client>
+public interface IClientStorage : IBaseStorage<Client>
 {
-    public void AddAccount(Guid id, Account newAccount);
-    public bool UpdateAccount(Guid Id, Account updatedAccount);
-    public bool DeleteAccount(Guid Id, Guid currencyId);
-    public List<Account> GetAccountsByClient(Client client);
+    Task AddAccountAsync(Guid id, Account newAccount);
+    Task<bool> UpdateAccountAsync(Guid id, Account updatedAccount,CancellationToken cancellationToken);
+    Task<bool> DeleteAccountAsync(Guid id, Guid currencyId);
+    Task<List<Account>> GetAccountsByClientAsync(Client client);
+    Task<ICollection<Account>> GetAllAccount(CancellationToken cancellationToken);
+    Task<Account> GetAccountByIdAsync(Guid clientId, CancellationToken cancellationToken);
+    Task<bool> UpdateAccountAsync(Account account, CancellationToken cancellationToken);
 }

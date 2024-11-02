@@ -1,15 +1,13 @@
-using BankSystemDomain.Models;
-
 namespace BankSystem.Data.Storage.Interfaces;
 
-public interface IBaseStorage<T> 
+public interface IBaseStorage<T>
 {
-    void Add(T entity);
-    bool Update(T entity);
-    bool Delete(T entity);
-    IReadOnlyList<T> GetEntities(int pageNumber, int pageSize, Func<IQueryable<T>, IQueryable<T>> filter = null);
-    T GetById(Guid Id);
+    Task AddAsync(T entity);
+    Task<bool> UpdateAsync(T entity);
+    Task<bool> DeleteAsync(T entity);
 
+    Task<IReadOnlyList<T>> GetEntitiesAsync(int pageNumber, int pageSize,
+        Func<IQueryable<T>, IQueryable<T>> filter = null);
 
-
+    Task<T> GetByIdAsync(Guid id);
 }

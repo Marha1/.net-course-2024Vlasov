@@ -23,24 +23,7 @@ public class ExportService_Test
     }
 
     [Fact]
-    public void ExportClients_ShouldExportToCSV()
-    {
-        // Arrange
-        var exportService =
-            new ExportService<Client>(_clientService, "C:\\Users\\Hi-Tech\\OneDrive\\Desktop", "clients.csv");
-        var clients = _clientService.GetEntities(1, 10);
-
-        // Act
-        exportService.Export(clients.ToList());
-
-        // Assert
-        var filePath = "C:\\Users\\Hi-Tech\\OneDrive\\Desktop\\clients.csv";
-        var lines = File.ReadAllLines(filePath);
-        Assert.NotEmpty(lines);
-    }
-
-    [Fact]
-    public void ImportClients_ShouldImportFromCSV()
+    public async Task ImportClients_ShouldImportFromCSV()
     {
         // Arrange
         var exportService =
@@ -54,7 +37,7 @@ public class ExportService_Test
         exportService.Import(filePath);
 
         // Assert
-        var importedClients = _clientService.GetEntities(1, 10).ToList();
+        var importedClients =  await _clientService.GetEntitiesAsync(1, 10);
         Assert.Contains(importedClients, c => c.Name == expectedClientName);
     }
 

@@ -4,8 +4,9 @@ namespace BankSystem.App.Services.Interfaces;
 
 public interface IClientService : IBaseService<Client>
 {
-    public void AddAccount(Guid id, Account newAccount);
-    public bool UpdateAccount(Guid id, Account updatedAccount);
-    public bool DeleteAccount(Guid id, Guid currencyId);
-    public List<Account> GetAccountsByClient(Client client);
+    Task AddAccountAsync(Guid id, Account newAccount);
+    Task<bool> UpdateAccountAsync(Guid id, Account updatedAccount,CancellationToken cancellationToken);
+    Task<bool> DeleteAccountAsync(Guid id, Guid currencyId);
+    Task<List<Account>> GetAccountsByClientAsync(Client client);
+    Task WithdrawAsync(Dictionary<Guid, decimal> withdrawalRequests, CancellationToken cancellationToken);
 }
