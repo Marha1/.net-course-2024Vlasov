@@ -1,5 +1,6 @@
 using BankSystemDomain.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace BankSystem.Data;
 
@@ -9,11 +10,9 @@ public class BankSystemDbContext : DbContext
     public DbSet<Account> Accounts => Set<Account>();
     public DbSet<Currency> Currencies => Set<Currency>();
     public DbSet<Employee> Employees => Set<Employee>();
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    public BankSystemDbContext(DbContextOptions<BankSystemDbContext> options, IConfiguration configuration)
+        : base(options)
     {
-        
-            optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=Bank;Username=postgres;Password=053352287");
-        
     }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
