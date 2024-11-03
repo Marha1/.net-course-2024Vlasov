@@ -1,0 +1,11 @@
+﻿namespace BankSystem.Api.Dto.ClientDto
+{
+    public class ClientRequest
+    {
+        public string PhoneNumber { get; set; }
+        public string PassportNumber { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public DateTime BirthDay { get; set; }
+    }
+}
